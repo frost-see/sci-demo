@@ -1,109 +1,147 @@
-#include <cassert>
 #include <cmath>
-#include <iostream>
+#include <functional>
+#include <limits>
+#include <stdexcept>
+#include <vector>
+
+#include <gtest/gtest.h>
+
 #include "../src/derivative.h"
 
-using namespace sci;
+namespace {
 
-// Test functions
-double linearFunc(double x) {
-    return 2.0 * x + 3.0;  // derivative = 2.0
+using sci::Derivative;
+
+constexpr double kTightTolerance = 1e-6;
+constexpr double kLooseTolerance = 1e-3;
+
+double linear(double x) {
+    return 2.0 * x + 3.0;
 }
 
-double quadraticFunc(double x) {
-    return x * x;  // derivative = 2x
+double quadratic(double x) {
+    return x * x;
 }
 
-double cubicFunc(double x) {
-    return x * x * x;  // derivative = 3x^2
+double cubic(double x) {
+    return x * x * x;
 }
 
-double sinFunc(double x) {
-    return std::sin(x);  // derivative = cos(x)
+double sine(double x) {
+    return std::sin(x);
 }
 
-double expFunc(double x) {
-    return std::exp(x);  // derivative = exp(x)
+double exponential(double x) {
+    return std::exp(x);
 }
 
-void testCentralDifference() {
-    std::cout << "Testing central difference method..." << std::endl;
-    
-    // Test linear function (derivative should be 2.0)
-    double deriv = Derivative::centralDifference(linearFunc, 1.0);
-    assert(std::abs(deriv - 2.0) < 1e-4);
-    std::cout << "  Linear function: PASSED" << std::endl;
-    
-    // Test quadratic function at x=2 (derivative should be 4.0)
-    deriv = Derivative::centralDifference(quadraticFunc, 2.0);
-    assert(std::abs(deriv - 4.0) < 1e-4);
-    std::cout << "  Quadratic function: PASSED" << std::endl;
-    
-    // Test sine function at x=0 (derivative should be 1.0)
-    deriv = Derivative::centralDifference(sinFunc, 0.0);
-    assert(std::abs(deriv - 1.0) < 1e-4);
-    std::cout << "  Sine function: PASSED" << std::endl;
+TEST(DerivativeMathTest, CoversBasicFunctionsAndArithmeticRules) {
+    EXPECT_NEAR(Derivative::centralDifference(linear, 1.0), 2.0, kTightTolerance);
+    EXPECT_NEAR(Derivative::centralDifference(quadratic, 2.0), 4.0, kTightTolerance);
+    EXPECT_NEAR(Derivative::centralDifference(sine, 0.0), 1.0, kTightTolerance);
+    EXPECT_NEAR(Derivative::centralDifference(exponential, 0.0), 1.0, kTightTolerance);
+
+    const auto arithmetic = [](double x) {
+        return (x * x + 3.0 * x) / (x + 2.0);
+    };
+    const double x = 1.5;
+    const double expected = (x * x + 4.0 * x + 6.0) / ((x + 2.0) * (x + 2.0));
+    EXPECT_NEAR(Derivative::forwardDifference(arithmetic, x), expected, kLooseTolerance);
+    EXPECT_NEAR(Derivative::backwardDifference(arithmetic, x), expected, kLooseTolerance);
 }
 
-void testForwardDifference() {
-    std::cout << "Testing forward difference method..." << std::endl;
-    
-    // Test linear function (derivative should be 2.0)
-    double deriv = Derivative::forwardDifference(linearFunc, 1.0);
-    assert(std::abs(deriv - 2.0) < 1e-3);
-    std::cout << "  Linear function: PASSED" << std::endl;
+TEST(DerivativeMathTest, CoversChainHigherOrderAndPartialDerivatives) {
+    const auto chained = [](double x) {
+        return std::sin(x * x);
+    };
+    const double chainPoint = 0.7;
+    EXPECT_NEAR(
+        Derivative::centralDifference(chained, chainPoint),
+        2.0 * chainPoint * std::cos(chainPoint * chainPoint),
+        kLooseTolerance);
+
+    EXPECT_NEAR(Derivative::secondDerivative(quadratic, 1.0), 2.0, kLooseTolerance);
+    EXPECT_NEAR(Derivative::secondDerivative(cubic, 1.0), 6.0, 1e-2);
+
+    const auto surface = [](double x, double y) {
+        return x * x * y + std::sin(y);
+    };
+    const double px = 2.0;
+    const double py = 0.4;
+    EXPECT_NEAR(Derivative::centralDifference([&](double x) { return surface(x, py); }, px), 2.0 * px * py, kLooseTolerance);
+    EXPECT_NEAR(Derivative::centralDifference([&](double y) { return surface(px, y); }, py), px * px + std::cos(py), kLooseTolerance);
 }
 
-void testBackwardDifference() {
-    std::cout << "Testing backward difference method..." << std::endl;
-    
-    // Test linear function (derivative should be 2.0)
-    double deriv = Derivative::backwardDifference(linearFunc, 1.0);
-    assert(std::abs(deriv - 2.0) < 1e-3);
-    std::cout << "  Linear function: PASSED" << std::endl;
+TEST(DerivativeMathTest, ComputesBatchDerivativesAcrossMultiplePoints) {
+    const std::vector<double> points = {0.0, 1.0, 2.0};
+    const std::vector<double> derivs = Derivative::derivatives(quadratic, points);
+
+    ASSERT_EQ(derivs.size(), points.size());
+    EXPECT_NEAR(derivs[0], 0.0, kLooseTolerance);
+    EXPECT_NEAR(derivs[1], 2.0, kLooseTolerance);
+    EXPECT_NEAR(derivs[2], 4.0, kLooseTolerance);
 }
 
-void testSecondDerivative() {
-    std::cout << "Testing second derivative..." << std::endl;
-    
-    // Test quadratic function (second derivative should be 2.0)
-    double deriv = Derivative::secondDerivative(quadraticFunc, 1.0);
-    assert(std::abs(deriv - 2.0) < 1e-3);
-    std::cout << "  Quadratic function: PASSED" << std::endl;
-    
-    // Test cubic function at x=1 (second derivative should be 6.0)
-    deriv = Derivative::secondDerivative(cubicFunc, 1.0);
-    assert(std::abs(deriv - 6.0) < 1e-2);
-    std::cout << "  Cubic function: PASSED" << std::endl;
+TEST(DerivativeSpecialPointTest, HandlesStationaryAndNonDifferentiablePoints) {
+    EXPECT_NEAR(Derivative::centralDifference(quadratic, 0.0), 0.0, kTightTolerance);
+
+    const auto absoluteValue = [](double x) {
+        return std::abs(x);
+    };
+    EXPECT_NEAR(Derivative::centralDifference(absoluteValue, 0.0), 0.0, kTightTolerance);
+    EXPECT_NEAR(Derivative::forwardDifference(absoluteValue, 0.0), 1.0, kLooseTolerance);
+    EXPECT_NEAR(Derivative::backwardDifference(absoluteValue, 0.0), -1.0, kLooseTolerance);
+
+    const auto relu = [](double x) {
+        return x < 0.0 ? 0.0 : x;
+    };
+    EXPECT_NEAR(Derivative::centralDifference(relu, 0.0), 0.5, kTightTolerance);
 }
 
-void testDerivatives() {
-    std::cout << "Testing derivatives at multiple points..." << std::endl;
-    
-    std::vector<double> points = {0.0, 1.0, 2.0};
-    std::vector<double> derivs = Derivative::derivatives(quadraticFunc, points);
-    
-    assert(derivs.size() == 3);
-    assert(std::abs(derivs[0] - 0.0) < 1e-3);   // 2*0 = 0
-    assert(std::abs(derivs[1] - 2.0) < 1e-3);   // 2*1 = 2
-    assert(std::abs(derivs[2] - 4.0) < 1e-3);   // 2*2 = 4
-    std::cout << "  Multiple points: PASSED" << std::endl;
+TEST(DerivativeNumericTest, RespectsToleranceAndStepSizeChoices) {
+    const double x = 0.3;
+    const double expected = std::cos(x);
+    const double coarse = Derivative::centralDifference(sine, x, 1e-2);
+    const double fine = Derivative::centralDifference(sine, x, 1e-5);
+
+    EXPECT_NEAR(coarse, expected, 1e-4);
+    EXPECT_NEAR(fine, expected, kTightTolerance);
+    EXPECT_LT(std::abs(fine - expected), std::abs(coarse - expected));
 }
 
-int main() {
-    std::cout << "Running derivative tests...\n" << std::endl;
-    
-    try {
-        testCentralDifference();
-        testForwardDifference();
-        testBackwardDifference();
-        testSecondDerivative();
-        testDerivatives();
-        
-        std::cout << "\nAll tests passed!" << std::endl;
-        return 0;
-    } catch (const std::exception& e) {
-        std::cout << "Test failed: " << e.what() << std::endl;
-        return 1;
-    }
+TEST(DerivativeNumericTest, SupportsVerySmallFiniteResults) {
+    const auto tinyScale = [](double x) {
+        return 1e-150 * x * x;
+    };
+    EXPECT_NEAR(Derivative::centralDifference(tinyScale, 1.0), 2e-150, 1e-156);
 }
+
+TEST(DerivativeRobustnessTest, RejectsInvalidInputsAndSpecialFloatingPoints) {
+    const std::function<double(double)> emptyFunction;
+    EXPECT_THROW(Derivative::centralDifference(emptyFunction, 0.0), std::invalid_argument);
+    EXPECT_THROW(Derivative::centralDifference(linear, 0.0, 0.0), std::invalid_argument);
+    EXPECT_THROW(Derivative::forwardDifference(linear, 0.0, -1e-3), std::invalid_argument);
+    EXPECT_THROW(Derivative::backwardDifference(linear, std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+    EXPECT_THROW(Derivative::secondDerivative(linear, std::numeric_limits<double>::infinity()), std::invalid_argument);
+    EXPECT_THROW(Derivative::centralDifference(linear, 0.0, std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+    EXPECT_THROW(Derivative::derivatives(linear, {0.0, std::numeric_limits<double>::infinity()}), std::invalid_argument);
+}
+
+TEST(DerivativeRobustnessTest, ReportsDomainErrorsWithoutCrashing) {
+    const auto logarithm = [](double x) {
+        return std::log(x);
+    };
+    EXPECT_THROW(Derivative::centralDifference(logarithm, 1e-6), std::domain_error);
+
+    const auto explosive = [](double x) {
+        return std::exp(x);
+    };
+    EXPECT_THROW(Derivative::forwardDifference(explosive, 710.0), std::domain_error);
+
+    const auto syntaxLikeFailure = [](double) -> double {
+        throw std::runtime_error("syntax error");
+    };
+    EXPECT_THROW(Derivative::centralDifference(syntaxLikeFailure, 0.0), std::runtime_error);
+}
+
+} // namespace
