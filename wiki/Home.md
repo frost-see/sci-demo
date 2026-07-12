@@ -13,14 +13,14 @@
 - `backwardDifference(f, x, h = 1e-5)`：后向差分。  
   公式：`(f(x) - f(x-h)) / h`
 - `secondDerivative(f, x, h = 1e-5)`：二阶导数中心差分。  
-  公式：`(f(x+h) - 2f(x) + f(x-h)) / h^2`
+  公式：`(f(x+h) - 2f(x) + f(x-h)) / (h^2)`
 - `derivatives(f, points, h = 1e-5)`：批量计算多个点的一阶导（内部使用中心差分）。
 
 ### 参数说明
 
 - `f`：`std::function<double(double)>`，待求导函数。
 - `x`：求导点。
-- `h`：步长，必须为有限且大于 0 的值；默认 `1e-5`。
+- `h`：步长，必须是有限值且必须大于 0；默认 `1e-5`。
 
 ### 异常与边界行为
 
