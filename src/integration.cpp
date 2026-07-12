@@ -29,7 +29,7 @@ double evaluateFinite(const std::function<double(double)>& f, double point) {
 
 namespace sci {
 
-double Integration::trapezoidal(std::function<double(double)> f, double a, double b, int intervals) {
+double Integration::trapezoidal(const std::function<double(double)>& f, double a, double b, int intervals) {
     validateInputs(f, a, b, intervals);
     if (a == b) {
         return 0.0;
@@ -48,7 +48,7 @@ double Integration::trapezoidal(std::function<double(double)> f, double a, doubl
     return sign * h * sum;
 }
 
-double Integration::simpson(std::function<double(double)> f, double a, double b, int intervals) {
+double Integration::simpson(const std::function<double(double)>& f, double a, double b, int intervals) {
     validateInputs(f, a, b, intervals);
     if (intervals % 2 != 0) {
         throw std::invalid_argument("simpson rule requires an even number of intervals");
