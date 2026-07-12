@@ -131,7 +131,7 @@ TEST(DerivativeRobustnessTest, ReportsDomainErrorsWithoutCrashing) {
     const auto logarithm = [](double x) {
         return std::log(x);
     };
-    EXPECT_THROW(Derivative::centralDifference(logarithm, 1e-6), std::domain_error);
+    EXPECT_THROW(Derivative::centralDifference(logarithm, 1e-10, 1e-5), std::domain_error);
 
     const auto explosive = [](double x) {
         return std::exp(x);
