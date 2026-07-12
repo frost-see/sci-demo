@@ -41,3 +41,41 @@ double d1 = sci::Derivative::centralDifference(f, 0.3);
 double d2 = sci::Derivative::secondDerivative(f, 0.3);
 std::vector<double> ds = sci::Derivative::derivatives(f, {0.0, 0.5, 1.0});
 ```
+
+## 曲线拟合功能帮助
+
+项目提供 `sci::CurveFitting` 类用于多项式最小二乘拟合，头文件路径为 `src/curve_fitting.h`。
+
+### 可用接口
+
+- `polynomialFit(x, y, degree)`：对离散点进行 `degree` 次多项式最小二乘拟合。
+- `PolynomialFitResult::evaluate(x)`：使用拟合结果预测指定点的函数值。
+
+### 返回结果
+
+- `coefficients`：按常数项到高次项顺序存放的多项式系数。
+- `rSquared`：拟合优度，范围通常为 `(-∞, 1]`，越接近 `1` 表示拟合越好。
+
+### 参数说明
+
+- `x`、`y`：输入样本点坐标，长度必须相同且不能为空。
+- `degree`：拟合多项式次数，要求样本点数量严格大于 `degree`。
+
+### 异常与边界行为
+
+- `x` / `y` 为空、长度不一致、包含非有限值，或样本点数量不足时，抛出 `std::invalid_argument`。
+- 若法方程不可解（例如所有 `x` 完全相同导致矩阵奇异），抛出 `std::domain_error`。
+- 对空拟合结果调用 `evaluate` 会抛出 `std::logic_error`；传入非有限 `x` 会抛出 `std::invalid_argument`。
+
+### 使用示例
+
+```cpp
+#include "curve_fitting.h"
+#include <vector>
+
+std::vector<double> x = {0.0, 1.0, 2.0, 3.0};
+std::vector<double> y = {1.0, 3.0, 5.0, 7.0};
+
+auto fit = sci::CurveFitting::polynomialFit(x, y, 1);
+double predicted = fit.evaluate(4.0);  // 9.0
+```
