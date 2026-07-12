@@ -73,8 +73,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install gcovr
-        run: pip3 install gcovr
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
 
       - name: Configure CMake with coverage flags
         run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage"
@@ -87,20 +87,21 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          gcovr --root . --object-directory build \
-            --exclude '.*/googletest/.*' \
-            --exclude '.*/FetchContent/.*' \
-            --exclude '.*/CMakeFiles/.*' \
-            --gcov-ignore-errors=source_not_found \
-            --gcov-ignore-errors=no_working_dir_found \
-            --print-summary \
-            --html-details coverage.html
+          lcov --capture --directory build \
+            --output-file coverage.info \
+            --ignore-errors mismatch,gcov
+          lcov --remove coverage.info \
+            '/usr/*' '*/googletest/*' \
+            --output-file coverage.info \
+            --ignore-errors unused
+          genhtml coverage.info --output-directory coverage-report
+          lcov --list coverage.info
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage*.html
+          path: coverage-report/
 
   package:
     name: Package & Upload
