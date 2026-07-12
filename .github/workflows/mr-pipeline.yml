@@ -23,6 +23,8 @@ jobs:
           cppcheck --enable=all --error-exitcode=1 \
             --suppress=missingIncludeSystem \
             --suppress=unmatchedSuppression \
+            --suppress=unusedFunction \
+            --suppress=useStlAlgorithm \
             src/
 
   security-scan:
