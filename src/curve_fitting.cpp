@@ -104,11 +104,17 @@ PolynomialFitResult CurveFitting::polynomialFit(
     const std::size_t order = degree + 1;
     std::vector<std::vector<double>> augmented(order, std::vector<double>(order + 1, 0.0));
     std::vector<double> powerSums(2 * degree + 1, 0.0);
+    std::vector<double> rhsSums(order, 0.0);
 
-    for (double xValue : x) {
+    for (std::size_t index = 0; index < x.size(); ++index) {
+        const double xValue = x[index];
+        const double yValue = y[index];
         double power = 1.0;
         for (std::size_t exponent = 0; exponent < powerSums.size(); ++exponent) {
             powerSums[exponent] += power;
+            if (exponent < order) {
+                rhsSums[exponent] += yValue * power;
+            }
             power *= xValue;
         }
     }
@@ -117,12 +123,7 @@ PolynomialFitResult CurveFitting::polynomialFit(
         for (std::size_t column = 0; column < order; ++column) {
             augmented[row][column] = powerSums[row + column];
         }
-
-        double rhs = 0.0;
-        for (std::size_t index = 0; index < x.size(); ++index) {
-            rhs += y[index] * std::pow(x[index], static_cast<int>(row));
-        }
-        augmented[row][order] = rhs;
+        augmented[row][order] = rhsSums[row];
     }
 
     PolynomialFitResult result;
