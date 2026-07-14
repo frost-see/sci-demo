@@ -13,3 +13,9 @@ add_executable(test_derivative test_derivative.cpp)
 target_link_libraries(test_derivative PRIVATE sci_derivative GTest::gtest_main)
 
 gtest_discover_tests(test_derivative)
+
+add_executable(test_curve_fitting test_curve_fitting.cpp)
+
+target_link_libraries(test_curve_fitting PRIVATE sci_curve_fitting GTest::gtest_main)
+
+gtest_discover_tests(test_curve_fitting)
