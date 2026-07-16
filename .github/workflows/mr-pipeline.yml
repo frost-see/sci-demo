@@ -123,7 +123,9 @@ jobs:
         run: |
           mkdir -p dist/lib dist/include
           cp build/src/libsci_derivative.a dist/lib/
+          cp build/src/libsci_curve_fit.a dist/lib/
           cp src/derivative.h dist/include/
+          cp src/curve_fit.h dist/include/
           tar -czf sci-demo-${{ github.sha }}.tar.gz -C dist .
 
       - name: Upload package

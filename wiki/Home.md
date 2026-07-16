@@ -41,3 +41,47 @@ double d1 = sci::Derivative::centralDifference(f, 0.3);
 double d2 = sci::Derivative::secondDerivative(f, 0.3);
 std::vector<double> ds = sci::Derivative::derivatives(f, {0.0, 0.5, 1.0});
 ```
+
+---
+
+## 曲线拟合功能帮助
+
+项目提供 `sci::CurveFit` 类用于最小二乘多项式拟合，头文件路径为 `src/curve_fit.h`。
+
+### 可用接口
+
+- `fit(x, y, degree)`：对数据点 `(x, y)` 进行 `degree` 次多项式拟合。  
+  返回系数向量 `[a0, a1, ..., an]`，对应多项式 `p(x) = a0 + a1*x + ... + an*x^n`。
+- `evaluate(coefficients, x)`：用给定系数向量在点 `x` 处求多项式值（Horner 法）。
+
+### 参数说明
+
+- `x`、`y`：`std::vector<double>`，数据点横纵坐标，长度必须相等且大于 `degree`。
+- `degree`：多项式次数，必须在 `[2, 5]` 之间（含边界）。
+- `coefficients`：`fit()` 返回的系数向量，或用户自定义的系数。
+
+### 异常与边界行为
+
+- `degree` 不在 `[2, 5]` 范围内时，抛出 `std::invalid_argument`。
+- `x` 或 `y` 为空，或长度不匹配，或数据点数不超过 `degree` 时，抛出 `std::invalid_argument`。
+- `x` 或 `y` 中存在 `NaN`、`±inf` 等非有限值时，抛出 `std::invalid_argument`。
+- 数据退化（如所有 `x` 值相同）导致法方程奇异时，抛出 `std::domain_error`。
+- `evaluate()` 中 `coefficients` 为空或 `x` 非有限时，抛出 `std::invalid_argument`。
+
+### 使用示例
+
+```cpp
+#include "curve_fit.h"
+#include <vector>
+
+// 数据点
+std::vector<double> xs = {-2.0, -1.0, 0.0, 1.0, 2.0, 3.0};
+std::vector<double> ys = { 7.0,  2.0, 1.0, 4.0, 11.0, 22.0};
+
+// 拟合二次多项式
+std::vector<double> coeffs = sci::CurveFit::fit(xs, ys, 2);
+// coeffs[0] = a0, coeffs[1] = a1, coeffs[2] = a2
+
+// 在新点上求值
+double predicted = sci::CurveFit::evaluate(coeffs, 1.5);
+```
