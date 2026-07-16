@@ -207,7 +207,7 @@ TEST(CurveFitEvaluateTest, EvaluatesQuadraticPolynomial) {
     EXPECT_NEAR(CurveFit::evaluate(coeffs, 2.0), 17.0, kTightTolerance);
 }
 
-TEST(CurveFitEvaluateTest, EvaluatesMathcesRoundTrip) {
+TEST(CurveFitEvaluateTest, EvaluatesMatchesRoundTrip) {
     // Fit then evaluate should reproduce y values closely.
     const std::vector<double> expected = {1.0, -2.0, 3.0};
     auto [xs, ys] = makeSamples(expected, -2.0, 2.0, 10);
