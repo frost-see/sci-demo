@@ -85,3 +85,24 @@ std::vector<double> coeffs = sci::CurveFit::fit(xs, ys, 2);
 // 在新点上求值
 double predicted = sci::CurveFit::evaluate(coeffs, 1.5);
 ```
+
+### 端到端验证示例
+
+`examples/e2e_curve_fit.cpp` 提供了完整的端到端验证程序，包含 4 个真实物理场景：
+
+| 场景 | 多项式次数 | 描述 |
+|---|---|---|
+| 抛体高度 | 2次 | `h(t) = h0 + v0·t - 0.5·g·t²` |
+| 热敏电阻阻值 | 3次 | 温度与电阻的三次多项式近似 |
+| 简支梁挠度 | 4次 | 分布载荷下梁的四次挠度曲线 |
+| 阻尼振荡器位移 | 5次 | `e^{-t}` 泰勒展开前六项 |
+
+程序对每个场景计算 R² 和最大残差，当 R² > 0.9999 且最大残差 < 1e-6 时判定为通过，否则以非零退出码结束（适合作为 CI 验收门禁）。
+
+编译与运行：
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target e2e_curve_fit
+./build/examples/e2e_curve_fit
+```

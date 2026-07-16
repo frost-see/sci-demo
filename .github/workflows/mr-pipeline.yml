@@ -105,10 +105,27 @@ jobs:
           name: coverage-report
           path: coverage-report/
 
+  e2e:
+    name: End-to-End Validation
+    runs-on: ubuntu-latest
+    needs: [ build ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --target e2e_curve_fit
+
+      - name: Run end-to-end demo
+        run: ./build/examples/e2e_curve_fit
+
   package:
     name: Package & Upload
     runs-on: ubuntu-latest
-    needs: [ build, test ]
+    needs: [ build, test, e2e ]
 
     steps:
       - uses: actions/checkout@v4
